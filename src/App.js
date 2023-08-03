@@ -27,12 +27,68 @@ function reducer(state, {type, payload}) {
         ...state, 
         currentOperand: `${state.currentOperand || ""}${payload.digit}`,
       }
+
+    case ACTIONS.CHOOSE_OPERATION:
+            /* below: if there's nothing in current or prev operand, operations cannot be ran */
+      if (state.currentOperand == null && state.previousOperand == null) { 
+        return state
+      };
+
+      /* below: if previous operand is empty, and you choose an operation whereas you have a current operand, the current operand will be moved to previous to make room for current operation */
+      if (state.previousOperand == null) {
+        return {
+          ...state,
+          operation: payload.operation,
+          previousOperand: state.currentOperand,
+          currentOperand: null
+        }
+      }; 
+
+      if (state.currentOperand == null) {
+        return {
+          ...state,
+          operation: payload.operation
+        }
+      }
+
+      return {
+        ...state,
+        previousOperand: evaluate(state),
+        operation: payload.operation,
+        currentOperand: null,
+      }
+
       /* below: clears entire currentoperand */
     case ACTIONS.CLEAR:
       return {}
   };
 };
 
+      /* below:  */
+
+      function evaluate({ currentOperand, previousOperand, operation }) {
+        const prev = parseFloat(previousOperand)
+        const current = parseFloat(currentOperand)
+        if (isNaN(prev) || isNaN(current)) return ""
+        let computation = ""
+        switch (operation) {
+          case "+":
+            computation = prev + current
+            break
+          case "-":
+            computation = prev - current
+            break
+          case "*":
+            computation = prev * current
+            break
+          case "÷":
+            computation = prev / current
+            break
+        }
+      
+        return computation.toString()
+      }
+       
 function App() {
   const [{currentOperand, previousOperand, operation}, dispatch] = useReducer(reducer,
     {})
